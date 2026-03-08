@@ -1,0 +1,11 @@
+{
+  "traceability": {
+    "policy_hierarchy": [
+      {
+        "id": "POL-001",
+        "description": "多要素認証の必須化",
+        "impacted_documents": ["RCM-001", "SOP-001"]
+      }
+    ]
+  }
+}
