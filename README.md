@@ -1,2 +1,2 @@
 # it-controls-management
-IT統制資料（WordやExcelの代わりにMarkdownやPDFを想定）の管理を想定したハンズオン
+IT統制資料（WordやExcelの代わりにMarkdownやPDFを想定）の管理を想定したハンズオンだよ
