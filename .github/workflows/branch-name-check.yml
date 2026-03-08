@@ -1,0 +1,22 @@
+name: "Branch Name Check"
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize]
+
+jobs:
+  check_branch_name:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check branch name format
+        shell: bash
+        run: |
+          # 許可する接頭辞を正規表現で定義
+          PATTERN="^(feature|fix|audit)\/.*"
+          BRANCH_NAME="${{ github.head_ref }}"
+          
+          if [[ ! $BRANCH_NAME =~ $PATTERN ]]; then
+            echo "Error: ブランチ名 '$BRANCH_NAME' はルール違反です。"
+            echo "ブランチ名は feature/, fix/, audit/ のいずれかで始めてください。"
+            exit 1
+          fi
