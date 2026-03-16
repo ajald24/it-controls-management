@@ -1,4 +1,4 @@
-name: Excel to Markdown Converter
+name: Excel to Markdown (All Sheets)
 
 on:
   push:
@@ -21,25 +21,34 @@ jobs:
       - name: Install dependencies
         run: pip install pandas openpyxl tabulate
 
-      - name: Convert Excel to Markdown
+      - name: Convert All Sheets to Markdown
         run: |
           python -c "
           import pandas as pd
           import glob
           import os
-          for f in glob.glob('*.xlsx'):
+
+          # 全てのExcelファイルを検索
+          for f in glob.glob('**/*.xlsx', recursive=True):
               base = os.path.splitext(f)[0]
-              df = pd.read_excel(f)
-              # Markdown形式に変換して保存
-              with open(f'{base}.md', 'w', encoding='utf-8') as md_file:
-                  md_file.write(f'# {base} Data\n\n')
-                  md_file.write(df.to_markdown(index=False))
+              
+              # Excelファイルを読み込み（sheet_name=Noneで全シート取得）
+              excel_data = pd.read_excel(f, sheet_name=None)
+              
+              for sheet_name, df in excel_data.items():
+                  # シート名を含んだファイル名を作成
+                  md_filename = f'{base}_{sheet_name}.md'
+                  
+                  with open(md_filename, 'w', encoding='utf-8') as md_file:
+                      md_file.write(f'# File: {f} / Sheet: {sheet_name}\n\n')
+                      md_file.write(df.to_markdown(index=False))
+                  print(f'Created: {md_filename}')
           "
 
       - name: Commit and Push Markdown
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add *.md
-          git diff --staged --quiet || git commit -m "docs: [skip ci] auto-update markdown from excel"
+          git add **/*.md
+          git diff --staged --quiet || git commit -m "docs: [skip ci] auto-update markdown from all excel sheets"
           git push

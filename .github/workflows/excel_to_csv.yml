@@ -1,9 +1,10 @@
-name: Excel to CSV Converter
+name: Excel to CSV (All Sheets)
 
 on:
   push:
     paths:
-      - '**.xlsx'  # Excelファイルが更新された時だけ実行
+      - '**.xlsx'
+  workflow_dispatch: 
 
 jobs:
   convert:
@@ -20,23 +21,37 @@ jobs:
       - name: Install dependencies
         run: pip install pandas openpyxl
 
-      - name: Convert Excel to CSV
+      - name: Convert All Sheets to CSV
         run: |
           python -c "
           import pandas as pd
           import glob
           import os
-          for f in glob.glob('*.xlsx'):
+
+          # 全てのExcelファイルを検索
+          for f in glob.glob('**/*.xlsx', recursive=True):
               base = os.path.splitext(f)[0]
-              pd.read_excel(f).to_csv(f'{base}.csv', index=False)
-              print(f'Converted {f}')
+              
+              # Excelファイルを読み込み（sheet_name=Noneで全シート取得）
+              try:
+                  excel_data = pd.read_excel(f, sheet_name=None)
+                  
+                  for sheet_name, df in excel_data.items():
+                      # シート名を含んだファイル名を作成（例: data_Sheet1.csv）
+                      csv_filename = f'{base}_{sheet_name}.csv'
+                      
+                      # CSVとして保存
+                      df.to_csv(csv_filename, index=False)
+                      print(f'Created: {csv_filename}')
+              except Exception as e:
+                  print(f'Error processing {f}: {e}')
           "
 
       - name: Commit and Push CSV
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add *.csv
+          git add **/*.csv
           # 差分がある場合のみコミット
-          git diff --staged --quiet || git commit -m "docs: [skip ci] auto-update csv from excel"
+          git diff --staged --quiet || git commit -m "docs: [skip ci] auto-update csv from all excel sheets"
           git push
