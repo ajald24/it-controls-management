@@ -1,0 +1,45 @@
+name: Excel to Markdown Converter
+
+on:
+  push:
+    paths:
+      - '**.xlsx'
+  workflow_dispatch: 
+
+jobs:
+  convert:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: pip install pandas openpyxl tabulate
+
+      - name: Convert Excel to Markdown
+        run: |
+          python -c "
+          import pandas as pd
+          import glob
+          import os
+          for f in glob.glob('*.xlsx'):
+              base = os.path.splitext(f)[0]
+              df = pd.read_excel(f)
+              # Markdown形式に変換して保存
+              with open(f'{base}.md', 'w', encoding='utf-8') as md_file:
+                  md_file.write(f'# {base} Data\n\n')
+                  md_file.write(df.to_markdown(index=False))
+          "
+
+      - name: Commit and Push Markdown
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add *.md
+          git diff --staged --quiet || git commit -m "docs: [skip ci] auto-update markdown from excel"
+          git push
